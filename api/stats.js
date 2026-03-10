@@ -16,14 +16,12 @@ export default async function handler(req, res) {
         "Notion-Version": "2022-06-28",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        sorts: [{ property: "Période", direction: "ascending" }],
-      }),
+      body: JSON.stringify({}), // Pas de tri côté Notion (accents = bug)
     });
 
     const data = await response.json();
 
-    // Mode debug : ajoute ?debug=true dans l'URL pour voir la réponse brute Notion
+    // Debug : /api/stats?debug=true pour voir la réponse brute
     if (req.query && req.query.debug === "true") {
       return res.status(200).json(data);
     }
@@ -32,26 +30,35 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Réponse Notion invalide", detail: data });
     }
 
-    // Trouve une propriété par nom, insensible aux accents et à la casse
-    function getProp(props, name) {
-      if (props[name] !== undefined) return props[name];
-      const normalize = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f×]/g, "");
-      const target = normalize(name);
-      const key = Object.keys(props).find(k => normalize(k) === target);
-      return key ? props[key] : undefined;
-    }
-
     const stats = data.results.map((page) => {
       const props = page.properties;
+
+      // Récupère n'importe quelle propriété par nom exact ou approximatif
+      function get(name) {
+        if (props[name]) return props[name];
+        const n = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f×]/g, "");
+        const key = Object.keys(props).find(k => n(k) === n(name));
+        return key ? props[key] : undefined;
+      }
+
+      const dateStart = get("Période")?.date?.start ?? get("Periode")?.date?.start ?? null;
+
       return {
-        semaine: getProp(props, "Semaine")?.title?.[0]?.plain_text ?? "?",
-        impressions: getProp(props, "Impressions")?.number ?? 0,
-        reactions: getProp(props, "Réactions")?.number ?? 0,
-        commentaires: getProp(props, "Commentaires")?.number ?? 0,
-        xImp: getProp(props, "× Impressions vs S-1")?.number ?? null,
-        xReac: getProp(props, "× Réactions vs S-1")?.number ?? null,
-        debut: getProp(props, "Période")?.date?.start ?? null,
+        semaine: get("Semaine")?.title?.[0]?.plain_text ?? "?",
+        impressions: get("Impressions")?.number ?? 0,
+        reactions: get("Réactions")?.number ?? get("Reactions")?.number ?? 0,
+        commentaires: get("Commentaires")?.number ?? 0,
+        xImp: get("× Impressions vs S-1")?.number ?? null,
+        xReac: get("× Réactions vs S-1")?.number ?? null,
+        debut: dateStart,
       };
+    });
+
+    // Tri chronologique côté JS (évite le problème d'accents dans l'API Notion)
+    stats.sort((a, b) => {
+      if (!a.debut) return 1;
+      if (!b.debut) return -1;
+      return a.debut.localeCompare(b.debut);
     });
 
     res.status(200).json(stats);
