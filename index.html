@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stats LinkedIn – Studio Pagaille</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0b0f1a;
+      color: #c8d6f0;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 28px 24px 40px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #3d5070;
+      font-family: monospace;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #e2ecff;
+      margin-top: 4px;
+    }
+
+    button#refresh {
+      background: #141e30;
+      border: 1px solid #1f2f4a;
+      color: #6a88b8;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: monospace;
+      transition: all .2s;
+    }
+    button#refresh:hover { background: #1f2f4a; color: #c8d6f0; }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .kpi {
+      background: #0e1525;
+      border: 1px solid #182236;
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #3d5070;
+      font-family: monospace;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .kpi-delta {
+      font-size: 11px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .kpi-week {
+      font-size: 10px;
+      color: #2a3a55;
+      margin-top: 2px;
+    }
+
+    .chart-box {
+      background: #0e1525;
+      border: 1px solid #182236;
+      border-radius: 12px;
+      padding: 20px 16px 12px;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 11px;
+      color: #3d5070;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+
+    .toggles {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      color: #5a7090;
+      font-family: monospace;
+      transition: opacity .2s;
+    }
+
+    .toggle.off { opacity: 0.3; }
+
+    .toggle-dot {
+      width: 22px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    th {
+      text-align: right;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #2a3a55;
+      padding: 10px 14px;
+      border-bottom: 1px solid #182236;
+    }
+    th:first-child { text-align: left; }
+
+    td {
+      text-align: right;
+      padding: 9px 14px;
+      border-bottom: 1px solid #0d1520;
+      color: #7a90b8;
+    }
+    td:first-child { text-align: left; color: #a0b4d0; }
+
+    .up { color: #5cbf8a; }
+    .down { color: #d07070; }
+
+    #status {
+      text-align: center;
+      padding: 60px;
+      color: #3d5070;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    canvas { max-height: 240px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">Studio Pagaille · LinkedIn</div>
+    <h1>Stats hebdomadaires</h1>
+  </div>
+  <button id="refresh">↻ Actualiser</button>
+</header>
+
+<div id="status">Chargement…</div>
+
+<div id="app" style="display:none">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="chart-box">
+    <div class="chart-title">Évolution semaine par semaine</div>
+    <div class="toggles" id="toggles"></div>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <table>
+      <thead>
+        <tr>
+          <th>Semaine</th>
+          <th>Impressions</th>
+          <th>Réactions</th>
+          <th>Commentaires</th>
+          <th>× Imp.</th>
+          <th>× Réac.</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const COLORS = {
+    impressions: "#4e9eff",
+    reactions: "#ff6b9d",
+    commentaires: "#5cbf8a",
+  };
+
+  let chartInstance = null;
+  let activeLines = { impressions: true, reactions: true, commentaires: true };
+  let allData = [];
+
+  async function load() {
+    document.getElementById("status").textContent = "Chargement…";
+    document.getElementById("app").style.display = "none";
+
+    try {
+      const res = await fetch("/api/stats");
+      allData = await res.json();
+
+      if (!Array.isArray(allData) || allData.length === 0) {
+        document.getElementById("status").textContent = "Aucune donnée. Ajoute des semaines dans Notion.";
+        return;
+      }
+
+      document.getElementById("status").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      renderKPIs(allData);
+      renderToggles();
+      renderChart(allData);
+      renderTable(allData);
+    } catch (e) {
+      document.getElementById("status").textContent = "Erreur : " + e.message;
+    }
+  }
+
+  function renderKPIs(data) {
+    const latest = data[data.length - 1];
+    const prev = data[data.length - 2];
+    const kpis = document.getElementById("kpis");
+
+    const fields = [
+      { key: "impressions", label: "Impressions", icon: "👁", color: COLORS.impressions },
+      { key: "reactions", label: "Réactions", icon: "❤️", color: COLORS.reactions },
+      { key: "commentaires", label: "Commentaires", icon: "💬", color: COLORS.commentaires },
+    ];
+
+    kpis.innerHTML = fields.map(({ key, label, icon, color }) => {
+      const val = latest[key];
+      const pval = prev?.[key];
+      const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
+      const sign = delta > 0 ? "▲" : "▼";
+      const cls = delta > 0 ? "up" : "down";
+
+      return `<div class="kpi">
+        <div class="kpi-label">${icon} ${label}</div>
+        <div class="kpi-value" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
+        ${delta !== null ? `<div class="kpi-delta ${cls}">${sign} ${Math.abs(delta)}% vs S-1</div>` : ""}
+        <div class="kpi-week">${latest.semaine}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderToggles() {
+    const container = document.getElementById("toggles");
+    container.innerHTML = ["impressions", "reactions", "commentaires"].map(key => `
+      <div class="toggle ${activeLines[key] ? '' : 'off'}" data-key="${key}" onclick="toggleLine('${key}')">
+        <div class="toggle-dot" style="background:${COLORS[key]}"></div>
+        <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+      </div>
+    `).join("");
+  }
+
+  function toggleLine(key) {
+    activeLines[key] = !activeLines[key];
+    renderToggles();
+    renderChart(allData);
+  }
+
+  function renderChart(data) {
+    const ctx = document.getElementById("chart").getContext("2d");
+    if (chartInstance) chartInstance.destroy();
+
+    const datasets = [];
+
+    if (activeLines.impressions) {
+      datasets.push({
+        label: "Impressions",
+        data: data.map(d => d.impressions),
+        borderColor: COLORS.impressions,
+        backgroundColor: COLORS.impressions + "18",
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.3,
+        yAxisID: "y1",
+      });
+    }
+
+    if (activeLines.reactions) {
+      datasets.push({
+        label: "Réactions",
+        data: data.map(d => d.reactions),
+        borderColor: COLORS.reactions,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.3,
+        yAxisID: "y2",
+      });
+    }
+
+    if (activeLines.commentaires) {
+      datasets.push({
+        label: "Commentaires",
+        data: data.map(d => d.commentaires),
+        borderColor: COLORS.commentaires,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.3,
+        yAxisID: "y2",
+      });
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: "line",
+      data: { labels: data.map(d => d.semaine), datasets },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#0b0f1a",
+            borderColor: "#182236",
+            borderWidth: 1,
+            titleColor: "#6a88b8",
+            bodyColor: "#c8d6f0",
+            titleFont: { family: "monospace", size: 11 },
+            bodyFont: { family: "monospace", size: 12 },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
+            grid: { color: "#141e30" },
+          },
+          y1: {
+            position: "left",
+            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
+            grid: { color: "#141e30" },
+          },
+          y2: {
+            position: "right",
+            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  }
+
+  function renderTable(data) {
+    const body = document.getElementById("table-body");
+    body.innerHTML = [...data].reverse().map(row => `
+      <tr>
+        <td>${row.semaine}</td>
+        <td style="color:${COLORS.impressions}">${row.impressions.toLocaleString("fr-FR")}</td>
+        <td style="color:${COLORS.reactions}">${row.reactions}</td>
+        <td style="color:${COLORS.commentaires}">${row.commentaires}</td>
+        <td>${row.xImp ? "×" + row.xImp : "—"}</td>
+        <td>${row.xReac ? "×" + row.xReac : "—"}</td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("refresh").addEventListener("click", load);
+  load();
+</script>
+
+</body>
+</html>
