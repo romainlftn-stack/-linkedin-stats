@@ -7,21 +7,39 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── LIGHT (défaut) ── */
     :root {
-      --bg: #f7f8fc;
-      --surface: #ffffff;
-      --border: #e8eaf2;
-      --border2: #d4d8ea;
-      --text: #1a1f36;
-      --muted: #8b92aa;
-      --muted2: #c4c9db;
-      --blue: #3b6ef0;
-      --pink: #e8427c;
-      --green: #1da362;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
+      --bg:       #F9F8F7;
+      --surface:  #ffffff;
+      --border:   #e8e6e3;
+      --border2:  #d4d0cb;
+      --text:     #1a1a18;
+      --muted:    #8f8b84;
+      --muted2:   #c4c0ba;
+      --blue:     #2c5fe0;
+      --pink:     #d63f74;
+      --green:    #1a9456;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'IBM Plex Sans', sans-serif;
+    }
+
+    /* ── DARK (système) ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:      #0c0e14;
+        --surface: #12151f;
+        --border:  #1c2133;
+        --border2: #242a3a;
+        --text:    #d0d8ef;
+        --muted:   #4a5470;
+        --muted2:  #2e3650;
+        --blue:    #4f8fff;
+        --pink:    #ff5c9e;
+        --green:   #4ecb8d;
+      }
     }
 
     body {
@@ -36,7 +54,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 14px 8px;
+      padding: 9px 13px 8px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
     }
@@ -52,20 +70,19 @@
     .topbar-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
-    /* Lien discret "Détail →" */
     .detail-link {
       font-size: 10px;
       font-family: var(--mono);
-      color: var(--muted);
+      color: var(--muted2);
       text-decoration: none;
       letter-spacing: .06em;
-      padding: 3px 8px;
+      padding: 3px 7px;
       border-radius: 4px;
-      transition: all .15s;
       border: 1px solid transparent;
+      transition: all .15s;
     }
     .detail-link:hover {
       color: var(--blue);
@@ -73,16 +90,15 @@
       background: var(--bg);
     }
 
-    /* Bouton refresh discret */
     .refresh-btn {
       background: none;
       border: 1px solid var(--border2);
-      color: var(--muted);
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      color: var(--muted2);
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -95,36 +111,36 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── WIDGET BODY ── */
-    .widget-body {
-      padding: 14px 14px 12px;
-    }
+    .widget-body { padding: 12px 13px 11px; }
 
-    /* KPIs */
     .kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 7px;
+      margin-bottom: 10px;
     }
 
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 7px;
+      padding: 9px 10px 8px;
     }
 
     .kpi-label {
       font-size: 9px;
       font-family: var(--mono);
       text-transform: uppercase;
-      letter-spacing: .09em;
+      letter-spacing: .08em;
       color: var(--muted);
-      margin-bottom: 5px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .kpi-val {
-      font-size: 20px;
+      font-size: 15px;        /* réduit vs avant */
       font-weight: 600;
       font-family: var(--mono);
       line-height: 1;
@@ -139,26 +155,26 @@
     .up   { color: var(--green); }
     .down { color: #c0392b; }
 
-    /* Chart */
+    /* ── CHART ── */
     .chart-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px 8px;
+      border-radius: 7px;
+      padding: 9px 11px 7px;
     }
 
     .chart-label {
       font-size: 9px;
       font-family: var(--mono);
       text-transform: uppercase;
-      letter-spacing: .09em;
+      letter-spacing: .08em;
       color: var(--muted2);
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     canvas { max-height: 80px; }
 
-    /* Loading */
+    /* ── LOADING ── */
     #loading {
       text-align: center;
       padding: 36px 0;
@@ -168,47 +184,24 @@
       letter-spacing: .08em;
     }
 
-    /* ══════════════════════════════
-       PAGE DÉTAIL (ouverte dans un nouvel onglet)
-    ══════════════════════════════ */
-    body.detail-mode {
-      --bg: #0c0e14;
-      --surface: #12151f;
-      --border: #1c2133;
-      --border2: #242a3a;
-      --text: #d0d8ef;
-      --muted: #4a5470;
-      --muted2: #2e3650;
-      --blue: #4f8fff;
-      --pink: #ff5c9e;
-      --green: #4ecb8d;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    body.detail-mode .topbar { background: var(--surface); border-color: var(--border); }
-    body.detail-mode .kpi    { background: var(--surface); border-color: var(--border); }
-    body.detail-mode .chart-wrap { background: var(--surface); border-color: var(--border); }
-    body.detail-mode .refresh-btn { border-color: var(--border2); }
+    /* ══════════════════════
+       MODE DÉTAIL
+    ══════════════════════ */
     body.detail-mode canvas { max-height: 200px !important; }
 
     .detail-title-bar {
-      padding: 18px 14px 14px;
+      padding: 16px 13px 12px;
       display: none;
     }
-
     body.detail-mode .detail-title-bar { display: block; }
-
-    .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .detail-title { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
     .detail-range { font-size: 11px; font-family: var(--mono); color: var(--muted); }
 
-    /* Toggles */
     .toggles {
       display: flex;
       gap: 12px;
       margin-bottom: 10px;
     }
-
     .toggle {
       display: flex; align-items: center; gap: 5px;
       cursor: pointer; font-size: 10px;
@@ -218,13 +211,28 @@
     .toggle.off { opacity: .3; }
     .toggle-line { width: 18px; height: 2px; border-radius: 2px; }
 
-    /* Table */
     table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); margin-top: 12px; }
-    th { text-align: right; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted2); padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    th {
+      text-align: right; font-size: 9px; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted2);
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+    }
     th:first-child { text-align: left; }
-    td { text-align: right; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    td {
+      text-align: right; padding: 8px 12px;
+      border-bottom: 1px solid var(--border); color: var(--muted);
+    }
     td:first-child { text-align: left; color: var(--text); opacity: .7; }
     tr:last-child td { border-bottom: none; }
+
+    .table-wrap {
+      display: none;
+      margin-top: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -241,25 +249,22 @@
 
 <div id="main" style="display:none">
 
-  <!-- TITRE (mode détail seulement) -->
   <div class="detail-title-bar">
     <div class="detail-title">Stats hebdomadaires</div>
     <div class="detail-range" id="detail-range"></div>
   </div>
 
   <div class="widget-body">
-    <!-- KPIs -->
+
     <div class="kpis" id="kpis"></div>
 
-    <!-- Chart -->
     <div class="chart-wrap">
       <div class="chart-label" id="chart-label">Impressions · dernières semaines</div>
       <div class="toggles" id="toggles" style="display:none"></div>
       <canvas id="chart"></canvas>
     </div>
 
-    <!-- Table (détail seulement) -->
-    <div id="table-wrap" style="display:none; margin-top:12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+    <div class="table-wrap" id="table-wrap">
       <table>
         <thead>
           <tr>
@@ -272,15 +277,19 @@
         <tbody id="table-body"></tbody>
       </table>
     </div>
+
   </div>
 </div>
 
 <script>
-const C = { impressions:"#3b6ef0", reactions:"#e8427c", commentaires:"#1da362" };
+const C = { impressions:"#2c5fe0", reactions:"#d63f74", commentaires:"#1a9456" };
+
+// Dark mode : ajuste les couleurs des courbes si dark
+const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+if (dark) { C.impressions="#4f8fff"; C.reactions="#ff5c9e"; C.commentaires="#4ecb8d"; }
+
 let allData = [], chartInst = null;
 let active = { impressions:true, reactions:true, commentaires:true };
-
-// Détecte si on est en mode détail (?mode=detail)
 const isDetail = new URLSearchParams(location.search).get("mode") === "detail";
 
 if (isDetail) {
@@ -298,7 +307,7 @@ async function loadData() {
   try {
     const res = await fetch("/api/stats");
     allData = await res.json();
-    if (!Array.isArray(allData) || !allData.length) throw new Error("Aucune donnée");
+    if (!Array.isArray(allData) || !allData.length) throw new Error("Aucune donnée. Ajoute des semaines dans Notion.");
     render();
   } catch(e) {
     document.getElementById("loading").textContent = "Erreur : " + e.message;
@@ -313,34 +322,33 @@ function render() {
 
   const latest = allData[allData.length - 1];
   const prev   = allData[allData.length - 2];
-  const first  = allData[0];
 
-  // Range
   if (isDetail) {
-    document.getElementById("detail-range").textContent = `${first.semaine} → ${latest.semaine}`;
+    document.getElementById("detail-range").textContent =
+      `${allData[0].semaine} → ${latest.semaine}`;
   }
 
   // KPIs
   const fields = [
-    { key:"impressions",  label:"Impressions", icon:"👁",  color:C.impressions },
-    { key:"reactions",    label:"Réactions",   icon:"❤️", color:C.reactions },
-    { key:"commentaires", label:"Comm.",        icon:"💬", color:C.commentaires },
+    { key:"impressions",  label:"Impressions", color:C.impressions },
+    { key:"reactions",    label:"Réactions",   color:C.reactions },
+    { key:"commentaires", label:"Comm.",        color:C.commentaires },
   ];
 
-  document.getElementById("kpis").innerHTML = fields.map(({key, label, icon, color}) => {
+  document.getElementById("kpis").innerHTML = fields.map(({key, label, color}) => {
     const val = latest[key], pval = prev?.[key];
     const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
     const cls = delta > 0 ? "up" : "down";
     return `<div class="kpi">
-      <div class="kpi-label">${isDetail ? icon+" " : ""}${label}</div>
+      <div class="kpi-label">${label}</div>
       <div class="kpi-val" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
       ${delta !== null ? `<div class="kpi-delta ${cls}">${delta>0?"▲":"▼"}${Math.abs(delta)}%${isDetail?" vs S-1":""}</div>` : ""}
     </div>`;
   }).join("");
 
-  // Toggles + table (mode détail seulement)
   if (isDetail) {
-    document.getElementById("chart-label").textContent = `Évolution sur ${allData.length} semaine${allData.length>1?"s":""}`;
+    document.getElementById("chart-label").textContent =
+      `Évolution sur ${allData.length} semaine${allData.length>1?"s":""}`;
     document.getElementById("toggles").style.display = "flex";
     document.getElementById("table-wrap").style.display = "block";
     renderToggles();
@@ -351,12 +359,13 @@ function render() {
 }
 
 function renderToggles() {
-  document.getElementById("toggles").innerHTML = ["impressions","reactions","commentaires"].map(key =>
-    `<div class="toggle ${active[key]?"":"off"}" onclick="toggleLine('${key}')">
-      <div class="toggle-line" style="background:${C[key]}"></div>
-      <span>${key.charAt(0).toUpperCase()+key.slice(1)}</span>
-    </div>`
-  ).join("");
+  document.getElementById("toggles").innerHTML =
+    ["impressions","reactions","commentaires"].map(key =>
+      `<div class="toggle ${active[key]?"":"off"}" onclick="toggleLine('${key}')">
+        <div class="toggle-line" style="background:${C[key]}"></div>
+        <span>${key.charAt(0).toUpperCase()+key.slice(1)}</span>
+      </div>`
+    ).join("");
 }
 
 function toggleLine(key) {
@@ -368,11 +377,13 @@ function toggleLine(key) {
 function renderChart() {
   if (chartInst) chartInst.destroy();
 
-  const data = isDetail ? allData : allData.slice(-8);
+  const gridColor = dark ? "#1c2133" : "#eeece9";
+  const tickColor = dark ? "#2e3650" : "#c4c0ba";
+
   const datasets = [];
 
   if (!isDetail) {
-    // Widget : une seule courbe impressions, minimaliste
+    const data = allData.slice(-8);
     datasets.push({
       data: data.map(d => d.impressions),
       borderColor: C.impressions,
@@ -382,55 +393,70 @@ function renderChart() {
       backgroundColor: C.impressions + "18",
       tension: 0.4,
     });
-  } else {
-    if (active.impressions) datasets.push({ label:"Impressions", data:allData.map(d=>d.impressions), borderColor:C.impressions, borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y1", fill:false });
-    if (active.reactions)   datasets.push({ label:"Réactions",   data:allData.map(d=>d.reactions),   borderColor:C.reactions,   borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
-    if (active.commentaires)datasets.push({ label:"Commentaires",data:allData.map(d=>d.commentaires),borderColor:C.commentaires,borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
+    chartInst = new Chart(document.getElementById("chart").getContext("2d"), {
+      type: "line",
+      data: { labels: data.map(d => d.semaine), datasets },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: { legend:{display:false}, tooltip:{enabled:false} },
+        scales: { x:{display:false}, y:{display:false} },
+      }
+    });
+    return;
   }
 
-  const scalesWidget = {
-    x: { display:false },
-    y: { display:false },
-  };
-
-  const scalesDetail = {
-    x:  { ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:"#1c2133"} },
-    y1: { position:"left",  ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:"#1c2133"} },
-    y2: { position:"right", ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{display:false} },
-  };
+  // Détail
+  if (active.impressions) datasets.push({ label:"Impressions", data:allData.map(d=>d.impressions), borderColor:C.impressions, borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y1", fill:false });
+  if (active.reactions)   datasets.push({ label:"Réactions",   data:allData.map(d=>d.reactions),   borderColor:C.reactions,   borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
+  if (active.commentaires)datasets.push({ label:"Commentaires",data:allData.map(d=>d.commentaires),borderColor:C.commentaires,borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
 
   chartInst = new Chart(document.getElementById("chart").getContext("2d"), {
     type: "line",
-    data: { labels: data.map(d => d.semaine), datasets },
+    data: { labels: allData.map(d => d.semaine), datasets },
     options: {
       responsive: true,
-      animation: !isDetail,
+      interaction: { mode:"index", intersect:false },
       plugins: {
-        legend: { display: false },
-        tooltip: isDetail ? {
-          backgroundColor:"#0c0e14", borderColor:"#1c2133", borderWidth:1,
-          titleColor:"#4a5470", bodyColor:"#d0d8ef",
-          titleFont:{family:"'IBM Plex Mono'",size:10},
-          bodyFont:{family:"'IBM Plex Mono'",size:11},
-        } : { enabled: false },
+        legend: { display:false },
+        tooltip: {
+          backgroundColor: dark ? "#0c0e14" : "#ffffff",
+          borderColor: dark ? "#1c2133" : "#e8e6e3",
+          borderWidth: 1,
+          titleColor: dark ? "#4a5470" : "#8f8b84",
+          bodyColor:  dark ? "#d0d8ef" : "#1a1a18",
+          titleFont: { family:"'IBM Plex Mono'", size:10 },
+          bodyFont:  { family:"'IBM Plex Mono'", size:11 },
+        }
       },
-      scales: isDetail ? scalesDetail : scalesWidget,
+      scales: {
+        x:  { ticks:{color:tickColor, font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:gridColor} },
+        y1: { position:"left",  ticks:{color:tickColor, font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:gridColor} },
+        y2: { position:"right", ticks:{color:tickColor, font:{family:"'IBM Plex Mono'",size:9}}, grid:{display:false} },
+      }
     }
   });
 }
 
 function renderTable() {
-  document.getElementById("table-body").innerHTML = [...allData].reverse().map(row => `
-    <tr>
-      <td>${row.semaine}</td>
-      <td style="color:${C.impressions}">${row.impressions.toLocaleString("fr-FR")}</td>
-      <td style="color:${C.reactions}">${row.reactions}</td>
-      <td style="color:${C.commentaires}">${row.commentaires}</td>
-    </tr>
-  `).join("");
+  document.getElementById("table-body").innerHTML =
+    [...allData].reverse().map(row => `
+      <tr>
+        <td>${row.semaine}</td>
+        <td style="color:${C.impressions}">${row.impressions.toLocaleString("fr-FR")}</td>
+        <td style="color:${C.reactions}">${row.reactions}</td>
+        <td style="color:${C.commentaires}">${row.commentaires}</td>
+      </tr>
+    `).join("");
 }
 
 document.getElementById("refresh-btn").addEventListener("click", loadData);
+
+// Réagit aux changements de mode en direct (ex: auto-switch macOS)
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  location.reload();
+});
+
 loadData();
 </script>
 </body>
