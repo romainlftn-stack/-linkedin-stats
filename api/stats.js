@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   const token = process.env.NOTION_TOKEN;
-  const dbId = "12d8489af9a249ae9ad2b4c2f10f23ad";
+  const dbId = "e130d90c9cbc43c8864621591c05cb5a";
 
   if (!token) {
     return res.status(500).json({ error: "NOTION_TOKEN manquant" });
