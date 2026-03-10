@@ -1,200 +1,346 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stats LinkedIn – Studio Pagaille</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stats LinkedIn</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
-    body {
-      background: #0b0f1a;
-      color: #c8d6f0;
-      font-family: 'DM Sans', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 28px 24px 40px;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0e14;
+      --surface: #12151f;
+      --border: #1c2133;
+      --border2: #242a3a;
+      --text: #d0d8ef;
+      --muted: #4a5470;
+      --muted2: #2e3650;
+      --blue: #4f8fff;
+      --pink: #ff5c9e;
+      --green: #4ecb8d;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
     }
 
-    header {
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 16px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      font-size: 11px;
+      font-family: var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .2s;
+      user-select: none;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--blue);
+    }
+
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ══════════════════════════
+       VUE 1 — WIDGET
+    ══════════════════════════ */
+    #widget {
+      padding: 14px 16px 12px;
+    }
+
+    .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
+      margin-bottom: 12px;
     }
 
-    .brand {
-      font-size: 11px;
-      letter-spacing: 0.14em;
+    .widget-brand {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: .1em;
       text-transform: uppercase;
-      color: #3d5070;
-      font-family: monospace;
     }
 
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #e2ecff;
-      margin-top: 4px;
+    .widget-latest {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
     }
 
-    button#refresh {
-      background: #141e30;
-      border: 1px solid #1f2f4a;
-      color: #6a88b8;
-      padding: 7px 14px;
+    .widget-kpi {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
+      padding: 10px 10px 8px;
+    }
+
+    .widget-kpi-label {
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .widget-kpi-val {
+      font-size: 18px;
+      font-weight: 600;
+      font-family: var(--mono);
+      line-height: 1;
+    }
+
+    .widget-kpi-delta {
+      font-size: 9px;
+      font-family: var(--mono);
+      margin-top: 3px;
+    }
+
+    .widget-chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 10px 6px;
+    }
+
+    .widget-chart-label {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    canvas#chart-widget { max-height: 90px; }
+
+    /* ══════════════════════════
+       VUE 2 — DÉTAIL
+    ══════════════════════════ */
+    #detail {
+      padding: 20px 18px 28px;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .detail-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .detail-subtitle {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .btn {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
-      font-family: monospace;
+      font-size: 11px;
+      font-family: var(--mono);
       transition: all .2s;
     }
-    button#refresh:hover { background: #1f2f4a; color: #c8d6f0; }
+    .btn:hover { background: var(--border2); color: var(--text); }
 
     .kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 18px;
     }
 
     .kpi {
-      background: #0e1525;
-      border: 1px solid #182236;
-      border-radius: 12px;
-      padding: 18px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
     }
 
     .kpi-label {
       font-size: 10px;
+      font-family: var(--mono);
       text-transform: uppercase;
-      letter-spacing: .1em;
-      color: #3d5070;
-      font-family: monospace;
-      margin-bottom: 8px;
+      letter-spacing: .09em;
+      color: var(--muted);
+      margin-bottom: 7px;
     }
 
-    .kpi-value {
-      font-size: 26px;
-      font-weight: 700;
-      font-family: monospace;
+    .kpi-val {
+      font-size: 24px;
+      font-weight: 600;
+      font-family: var(--mono);
+      line-height: 1;
     }
 
     .kpi-delta {
-      font-size: 11px;
+      font-size: 10px;
+      font-family: var(--mono);
       margin-top: 4px;
-      font-family: monospace;
     }
 
-    .kpi-week {
-      font-size: 10px;
-      color: #2a3a55;
-      margin-top: 2px;
-    }
+    .up { color: var(--green); }
+    .down { color: #d06060; }
 
     .chart-box {
-      background: #0e1525;
-      border: 1px solid #182236;
-      border-radius: 12px;
-      padding: 20px 16px 12px;
-      margin-bottom: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 14px 12px;
+      margin-bottom: 14px;
     }
 
-    .chart-title {
-      font-size: 11px;
-      color: #3d5070;
-      font-family: monospace;
+    .chart-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .chart-label {
+      font-size: 10px;
+      font-family: var(--mono);
       text-transform: uppercase;
-      letter-spacing: .1em;
-      margin-bottom: 16px;
-      padding-left: 4px;
+      letter-spacing: .09em;
+      color: var(--muted);
     }
 
     .toggles {
       display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-      padding-left: 4px;
+      gap: 12px;
     }
 
     .toggle {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
-      font-size: 11px;
-      color: #5a7090;
-      font-family: monospace;
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
       transition: opacity .2s;
+      user-select: none;
     }
 
-    .toggle.off { opacity: 0.3; }
+    .toggle.off { opacity: .3; }
+    .toggle-line { width: 18px; height: 2px; border-radius: 2px; }
 
-    .toggle-dot {
-      width: 22px;
-      height: 3px;
-      border-radius: 2px;
-    }
+    canvas#chart-detail { max-height: 200px; }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      font-family: monospace;
+      font-family: var(--mono);
     }
 
     th {
       text-align: right;
-      font-size: 10px;
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #2a3a55;
-      padding: 10px 14px;
-      border-bottom: 1px solid #182236;
+      letter-spacing: .09em;
+      color: var(--muted2);
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
     }
     th:first-child { text-align: left; }
 
     td {
       text-align: right;
-      padding: 9px 14px;
-      border-bottom: 1px solid #0d1520;
-      color: #7a90b8;
+      padding: 8px 12px;
+      border-bottom: 1px solid #0e1118;
+      color: var(--muted);
     }
-    td:first-child { text-align: left; color: #a0b4d0; }
+    td:first-child { text-align: left; color: #8090b8; }
 
-    .up { color: #5cbf8a; }
-    .down { color: #d07070; }
+    tr:last-child td { border-bottom: none; }
 
-    #status {
+    /* ── LOADING ── */
+    #loading {
       text-align: center;
-      padding: 60px;
-      color: #3d5070;
-      font-family: monospace;
-      font-size: 12px;
+      padding: 40px 0;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
     }
-
-    canvas { max-height: 240px; }
   </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <div class="brand">Studio Pagaille · LinkedIn</div>
-    <h1>Stats hebdomadaires</h1>
+<div class="tabs">
+  <div class="tab active" data-tab="widget">Widget</div>
+  <div class="tab" data-tab="detail">Détail</div>
+</div>
+
+<div id="loading">Chargement…</div>
+
+<div id="widget" class="view">
+  <div class="widget-header">
+    <span class="widget-brand">Studio Pagaille · LinkedIn</span>
+    <span id="widget-period" style="font-size:10px;font-family:var(--mono);color:var(--muted)"></span>
   </div>
-  <button id="refresh">↻ Actualiser</button>
-</header>
+  <div class="widget-latest" id="widget-kpis"></div>
+  <div class="widget-chart-wrap">
+    <div class="widget-chart-label">Impressions · 8 dernières semaines</div>
+    <canvas id="chart-widget"></canvas>
+  </div>
+</div>
 
-<div id="status">Chargement…</div>
+<div id="detail" class="view">
+  <div class="detail-header">
+    <div>
+      <div class="detail-title">Stats hebdomadaires</div>
+      <div class="detail-subtitle" id="detail-range"></div>
+    </div>
+    <button class="btn" onclick="loadData()">↻</button>
+  </div>
 
-<div id="app" style="display:none">
-  <div class="kpis" id="kpis"></div>
+  <div class="kpis" id="detail-kpis"></div>
 
   <div class="chart-box">
-    <div class="chart-title">Évolution semaine par semaine</div>
-    <div class="toggles" id="toggles"></div>
-    <canvas id="chart"></canvas>
+    <div class="chart-top">
+      <span class="chart-label" id="detail-weeks"></span>
+      <div class="toggles" id="toggles"></div>
+    </div>
+    <canvas id="chart-detail"></canvas>
   </div>
 
   <div class="chart-box">
@@ -205,8 +351,6 @@
           <th>Impressions</th>
           <th>Réactions</th>
           <th>Commentaires</th>
-          <th>× Imp.</th>
-          <th>× Réac.</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -215,188 +359,211 @@
 </div>
 
 <script>
-  const COLORS = {
-    impressions: "#4e9eff",
-    reactions: "#ff6b9d",
-    commentaires: "#5cbf8a",
-  };
+const C = {
+  impressions: "#4f8fff",
+  reactions:   "#ff5c9e",
+  commentaires:"#4ecb8d",
+};
 
-  let chartInstance = null;
-  let activeLines = { impressions: true, reactions: true, commentaires: true };
-  let allData = [];
+let allData = [];
+let chartWidget = null, chartDetail = null;
+let active = { impressions: true, reactions: true, commentaires: true };
 
-  async function load() {
-    document.getElementById("status").textContent = "Chargement…";
-    document.getElementById("app").style.display = "none";
+/* ── TABS ── */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
+});
 
-    try {
-      const res = await fetch("/api/stats");
-      allData = await res.json();
+/* ── LOAD ── */
+async function loadData() {
+  document.getElementById("loading").style.display = "block";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
 
-      if (!Array.isArray(allData) || allData.length === 0) {
-        document.getElementById("status").textContent = "Aucune donnée. Ajoute des semaines dans Notion.";
-        return;
-      }
+  try {
+    const res = await fetch("/api/stats");
+    allData = await res.json();
+    if (!Array.isArray(allData) || !allData.length) throw new Error("Aucune donnée");
 
-      document.getElementById("status").style.display = "none";
-      document.getElementById("app").style.display = "block";
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("widget").classList.add("active");
 
-      renderKPIs(allData);
-      renderToggles();
-      renderChart(allData);
-      renderTable(allData);
-    } catch (e) {
-      document.getElementById("status").textContent = "Erreur : " + e.message;
-    }
+    renderWidget();
+    renderDetail();
+  } catch(e) {
+    document.getElementById("loading").textContent = "Erreur : " + e.message;
   }
+}
 
-  function renderKPIs(data) {
-    const latest = data[data.length - 1];
-    const prev = data[data.length - 2];
-    const kpis = document.getElementById("kpis");
+/* ══ WIDGET ══ */
+function renderWidget() {
+  const latest = allData[allData.length - 1];
+  const prev   = allData[allData.length - 2];
 
-    const fields = [
-      { key: "impressions", label: "Impressions", icon: "👁", color: COLORS.impressions },
-      { key: "reactions", label: "Réactions", icon: "❤️", color: COLORS.reactions },
-      { key: "commentaires", label: "Commentaires", icon: "💬", color: COLORS.commentaires },
-    ];
+  document.getElementById("widget-period").textContent = latest.semaine;
 
-    kpis.innerHTML = fields.map(({ key, label, icon, color }) => {
-      const val = latest[key];
-      const pval = prev?.[key];
-      const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
-      const sign = delta > 0 ? "▲" : "▼";
-      const cls = delta > 0 ? "up" : "down";
+  const fields = [
+    { key: "impressions", label: "Imp.", color: C.impressions },
+    { key: "reactions",   label: "Réac.", color: C.reactions },
+    { key: "commentaires",label: "Com.", color: C.commentaires },
+  ];
 
-      return `<div class="kpi">
-        <div class="kpi-label">${icon} ${label}</div>
-        <div class="kpi-value" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
-        ${delta !== null ? `<div class="kpi-delta ${cls}">${sign} ${Math.abs(delta)}% vs S-1</div>` : ""}
-        <div class="kpi-week">${latest.semaine}</div>
-      </div>`;
-    }).join("");
-  }
+  document.getElementById("widget-kpis").innerHTML = fields.map(({ key, label, color }) => {
+    const val = latest[key];
+    const pval = prev?.[key];
+    const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
+    const cls = delta > 0 ? "up" : "down";
+    return `<div class="widget-kpi">
+      <div class="widget-kpi-label">${label}</div>
+      <div class="widget-kpi-val" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
+      ${delta !== null ? `<div class="widget-kpi-delta ${cls}">${delta > 0 ? "▲" : "▼"}${Math.abs(delta)}%</div>` : ""}
+    </div>`;
+  }).join("");
 
-  function renderToggles() {
-    const container = document.getElementById("toggles");
-    container.innerHTML = ["impressions", "reactions", "commentaires"].map(key => `
-      <div class="toggle ${activeLines[key] ? '' : 'off'}" data-key="${key}" onclick="toggleLine('${key}')">
-        <div class="toggle-dot" style="background:${COLORS[key]}"></div>
-        <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
-      </div>
-    `).join("");
-  }
-
-  function toggleLine(key) {
-    activeLines[key] = !activeLines[key];
-    renderToggles();
-    renderChart(allData);
-  }
-
-  function renderChart(data) {
-    const ctx = document.getElementById("chart").getContext("2d");
-    if (chartInstance) chartInstance.destroy();
-
-    const datasets = [];
-
-    if (activeLines.impressions) {
-      datasets.push({
-        label: "Impressions",
-        data: data.map(d => d.impressions),
-        borderColor: COLORS.impressions,
-        backgroundColor: COLORS.impressions + "18",
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: false,
-        tension: 0.3,
-        yAxisID: "y1",
-      });
-    }
-
-    if (activeLines.reactions) {
-      datasets.push({
-        label: "Réactions",
-        data: data.map(d => d.reactions),
-        borderColor: COLORS.reactions,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: false,
-        tension: 0.3,
-        yAxisID: "y2",
-      });
-    }
-
-    if (activeLines.commentaires) {
-      datasets.push({
-        label: "Commentaires",
-        data: data.map(d => d.commentaires),
-        borderColor: COLORS.commentaires,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: false,
-        tension: 0.3,
-        yAxisID: "y2",
-      });
-    }
-
-    chartInstance = new Chart(ctx, {
-      type: "line",
-      data: { labels: data.map(d => d.semaine), datasets },
-      options: {
-        responsive: true,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "#0b0f1a",
-            borderColor: "#182236",
-            borderWidth: 1,
-            titleColor: "#6a88b8",
-            bodyColor: "#c8d6f0",
-            titleFont: { family: "monospace", size: 11 },
-            bodyFont: { family: "monospace", size: 12 },
-          },
-        },
-        scales: {
-          x: {
-            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
-            grid: { color: "#141e30" },
-          },
-          y1: {
-            position: "left",
-            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
-            grid: { color: "#141e30" },
-          },
-          y2: {
-            position: "right",
-            ticks: { color: "#3d5070", font: { family: "monospace", size: 10 } },
-            grid: { display: false },
-          },
-        },
+  const last8 = allData.slice(-8);
+  if (chartWidget) chartWidget.destroy();
+  chartWidget = new Chart(document.getElementById("chart-widget").getContext("2d"), {
+    type: "line",
+    data: {
+      labels: last8.map(d => d.semaine),
+      datasets: [{
+        data: last8.map(d => d.impressions),
+        borderColor: C.impressions,
+        borderWidth: 1.5,
+        pointRadius: 2,
+        fill: true,
+        backgroundColor: C.impressions + "15",
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false },
       },
-    });
-  }
+      animation: false,
+    }
+  });
+}
 
-  function renderTable(data) {
-    const body = document.getElementById("table-body");
-    body.innerHTML = [...data].reverse().map(row => `
-      <tr>
-        <td>${row.semaine}</td>
-        <td style="color:${COLORS.impressions}">${row.impressions.toLocaleString("fr-FR")}</td>
-        <td style="color:${COLORS.reactions}">${row.reactions}</td>
-        <td style="color:${COLORS.commentaires}">${row.commentaires}</td>
-        <td>${row.xImp ? "×" + row.xImp : "—"}</td>
-        <td>${row.xReac ? "×" + row.xReac : "—"}</td>
-      </tr>
-    `).join("");
-  }
+/* ══ DÉTAIL ══ */
+function renderDetail() {
+  const latest = allData[allData.length - 1];
+  const prev   = allData[allData.length - 2];
+  const first  = allData[0];
 
-  document.getElementById("refresh").addEventListener("click", load);
-  load();
+  document.getElementById("detail-range").textContent =
+    `${first.semaine} → ${latest.semaine}`;
+  document.getElementById("detail-weeks").textContent =
+    `Évolution sur ${allData.length} semaine${allData.length > 1 ? "s" : ""}`;
+
+  // KPIs
+  const fields = [
+    { key: "impressions",  label: "Impressions",  icon: "👁",  color: C.impressions },
+    { key: "reactions",    label: "Réactions",    icon: "❤️",  color: C.reactions },
+    { key: "commentaires", label: "Commentaires", icon: "💬", color: C.commentaires },
+  ];
+
+  document.getElementById("detail-kpis").innerHTML = fields.map(({ key, label, icon, color }) => {
+    const val  = latest[key];
+    const pval = prev?.[key];
+    const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
+    const cls = delta > 0 ? "up" : "down";
+    return `<div class="kpi">
+      <div class="kpi-label">${icon} ${label}</div>
+      <div class="kpi-val" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
+      ${delta !== null ? `<div class="kpi-delta ${cls}">${delta > 0 ? "▲" : "▼"}${Math.abs(delta)}% vs S-1</div>` : ""}
+    </div>`;
+  }).join("");
+
+  renderToggles();
+  renderDetailChart();
+  renderTable();
+}
+
+function renderToggles() {
+  document.getElementById("toggles").innerHTML = ["impressions","reactions","commentaires"].map(key => `
+    <div class="toggle ${active[key] ? "" : "off"}" onclick="toggleLine('${key}')">
+      <div class="toggle-line" style="background:${C[key]}"></div>
+      <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+    </div>
+  `).join("");
+}
+
+function toggleLine(key) {
+  active[key] = !active[key];
+  renderToggles();
+  renderDetailChart();
+}
+
+function renderDetailChart() {
+  if (chartDetail) chartDetail.destroy();
+
+  const datasets = [];
+  if (active.impressions) datasets.push({
+    label: "Impressions", data: allData.map(d => d.impressions),
+    borderColor: C.impressions, borderWidth: 2,
+    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
+    yAxisID: "y1", fill: false,
+  });
+  if (active.reactions) datasets.push({
+    label: "Réactions", data: allData.map(d => d.reactions),
+    borderColor: C.reactions, borderWidth: 2,
+    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
+    yAxisID: "y2", fill: false,
+  });
+  if (active.commentaires) datasets.push({
+    label: "Commentaires", data: allData.map(d => d.commentaires),
+    borderColor: C.commentaires, borderWidth: 2,
+    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
+    yAxisID: "y2", fill: false,
+  });
+
+  chartDetail = new Chart(document.getElementById("chart-detail").getContext("2d"), {
+    type: "line",
+    data: { labels: allData.map(d => d.semaine), datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0c0e14",
+          borderColor: "#1c2133",
+          borderWidth: 1,
+          titleColor: "#4a5470",
+          bodyColor: "#d0d8ef",
+          titleFont: { family: "'IBM Plex Mono'", size: 10 },
+          bodyFont:  { family: "'IBM Plex Mono'", size: 11 },
+        }
+      },
+      scales: {
+        x:  { ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { color:"#12151f" } },
+        y1: { position:"left",  ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { color:"#1c2133" } },
+        y2: { position:"right", ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { display:false } },
+      }
+    }
+  });
+}
+
+function renderTable() {
+  document.getElementById("table-body").innerHTML = [...allData].reverse().map(row => `
+    <tr>
+      <td>${row.semaine}</td>
+      <td style="color:${C.impressions}">${row.impressions.toLocaleString("fr-FR")}</td>
+      <td style="color:${C.reactions}">${row.reactions}</td>
+      <td style="color:${C.commentaires}">${row.commentaires}</td>
+    </tr>
+  `).join("");
+}
+
+loadData();
 </script>
-
 </body>
 </html>
