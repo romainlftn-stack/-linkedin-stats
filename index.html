@@ -3,24 +3,23 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stats LinkedIn</title>
+  <title>Stats LinkedIn – Studio Pagaille</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0c0e14;
-      --surface: #12151f;
-      --border: #1c2133;
-      --border2: #242a3a;
-      --text: #d0d8ef;
-      --muted: #4a5470;
-      --muted2: #2e3650;
-      --blue: #4f8fff;
-      --pink: #ff5c9e;
-      --green: #4ecb8d;
+      --bg: #f7f8fc;
+      --surface: #ffffff;
+      --border: #e8eaf2;
+      --border2: #d4d8ea;
+      --text: #1a1f36;
+      --muted: #8b92aa;
+      --muted2: #c4c9db;
+      --blue: #3b6ef0;
+      --pink: #e8427c;
+      --green: #1da362;
       --mono: 'IBM Plex Mono', monospace;
       --sans: 'IBM Plex Sans', sans-serif;
     }
@@ -32,522 +31,390 @@
       min-height: 100vh;
     }
 
-    /* ── TABS ── */
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      padding: 0 16px;
-    }
-
-    .tab {
-      padding: 10px 16px;
-      font-size: 11px;
-      font-family: var(--mono);
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all .2s;
-      user-select: none;
-    }
-
-    .tab.active {
-      color: var(--text);
-      border-bottom-color: var(--blue);
-    }
-
-    .tab:hover:not(.active) { color: var(--text); }
-
-    /* ── VIEWS ── */
-    .view { display: none; }
-    .view.active { display: block; }
-
-    /* ══════════════════════════
-       VUE 1 — WIDGET
-    ══════════════════════════ */
-    #widget {
-      padding: 14px 16px 12px;
-    }
-
-    .widget-header {
+    /* ── TOP BAR ── */
+    .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
     }
 
-    .widget-brand {
+    .brand {
       font-size: 10px;
       font-family: var(--mono);
-      color: var(--muted);
+      color: var(--muted2);
       letter-spacing: .1em;
       text-transform: uppercase;
     }
 
-    .widget-latest {
+    .topbar-right {
       display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
+      align-items: center;
+      gap: 8px;
     }
 
-    .widget-kpi {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 10px 8px;
-    }
-
-    .widget-kpi-label {
-      font-size: 9px;
-      font-family: var(--mono);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .widget-kpi-val {
-      font-size: 18px;
-      font-weight: 600;
-      font-family: var(--mono);
-      line-height: 1;
-    }
-
-    .widget-kpi-delta {
-      font-size: 9px;
-      font-family: var(--mono);
-      margin-top: 3px;
-    }
-
-    .widget-chart-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 10px 6px;
-    }
-
-    .widget-chart-label {
-      font-size: 9px;
+    /* Lien discret "Détail →" */
+    .detail-link {
+      font-size: 10px;
       font-family: var(--mono);
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 8px;
+      text-decoration: none;
+      letter-spacing: .06em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      transition: all .15s;
+      border: 1px solid transparent;
+    }
+    .detail-link:hover {
+      color: var(--blue);
+      border-color: var(--border2);
+      background: var(--bg);
     }
 
-    canvas#chart-widget { max-height: 90px; }
-
-    /* ══════════════════════════
-       VUE 2 — DÉTAIL
-    ══════════════════════════ */
-    #detail {
-      padding: 20px 18px 28px;
-    }
-
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
-    }
-
-    .detail-title {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .detail-subtitle {
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .btn {
-      background: var(--surface);
+    /* Bouton refresh discret */
+    .refresh-btn {
+      background: none;
       border: 1px solid var(--border2);
       color: var(--muted);
-      padding: 6px 12px;
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 11px;
-      font-family: var(--mono);
-      transition: all .2s;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      padding: 0;
+      line-height: 1;
     }
-    .btn:hover { background: var(--border2); color: var(--text); }
+    .refresh-btn:hover { color: var(--text); border-color: var(--border2); background: var(--border); }
+    .refresh-btn.spinning { animation: spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── WIDGET BODY ── */
+    .widget-body {
+      padding: 14px 14px 12px;
+    }
+
+    /* KPIs */
     .kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
+      border-radius: 8px;
+      padding: 10px 12px;
     }
 
     .kpi-label {
-      font-size: 10px;
+      font-size: 9px;
       font-family: var(--mono);
       text-transform: uppercase;
       letter-spacing: .09em;
       color: var(--muted);
-      margin-bottom: 7px;
+      margin-bottom: 5px;
     }
 
     .kpi-val {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 600;
       font-family: var(--mono);
       line-height: 1;
     }
 
     .kpi-delta {
-      font-size: 10px;
+      font-size: 9px;
       font-family: var(--mono);
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    .up { color: var(--green); }
-    .down { color: #d06060; }
+    .up   { color: var(--green); }
+    .down { color: #c0392b; }
 
-    .chart-box {
+    /* Chart */
+    .chart-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px 14px 12px;
-      margin-bottom: 14px;
-    }
-
-    .chart-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
+      border-radius: 8px;
+      padding: 10px 12px 8px;
     }
 
     .chart-label {
-      font-size: 10px;
-      font-family: var(--mono);
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      color: var(--muted);
-    }
-
-    .toggles {
-      display: flex;
-      gap: 12px;
-    }
-
-    .toggle {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      font-size: 10px;
-      font-family: var(--mono);
-      color: var(--muted);
-      transition: opacity .2s;
-      user-select: none;
-    }
-
-    .toggle.off { opacity: .3; }
-    .toggle-line { width: 18px; height: 2px; border-radius: 2px; }
-
-    canvas#chart-detail { max-height: 200px; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      font-family: var(--mono);
-    }
-
-    th {
-      text-align: right;
       font-size: 9px;
+      font-family: var(--mono);
       text-transform: uppercase;
       letter-spacing: .09em;
       color: var(--muted2);
-      padding: 9px 12px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
     }
-    th:first-child { text-align: left; }
 
-    td {
-      text-align: right;
-      padding: 8px 12px;
-      border-bottom: 1px solid #0e1118;
-      color: var(--muted);
-    }
-    td:first-child { text-align: left; color: #8090b8; }
+    canvas { max-height: 80px; }
 
-    tr:last-child td { border-bottom: none; }
-
-    /* ── LOADING ── */
+    /* Loading */
     #loading {
       text-align: center;
-      padding: 40px 0;
-      font-size: 11px;
+      padding: 36px 0;
+      font-size: 10px;
       font-family: var(--mono);
-      color: var(--muted);
+      color: var(--muted2);
+      letter-spacing: .08em;
     }
+
+    /* ══════════════════════════════
+       PAGE DÉTAIL (ouverte dans un nouvel onglet)
+    ══════════════════════════════ */
+    body.detail-mode {
+      --bg: #0c0e14;
+      --surface: #12151f;
+      --border: #1c2133;
+      --border2: #242a3a;
+      --text: #d0d8ef;
+      --muted: #4a5470;
+      --muted2: #2e3650;
+      --blue: #4f8fff;
+      --pink: #ff5c9e;
+      --green: #4ecb8d;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body.detail-mode .topbar { background: var(--surface); border-color: var(--border); }
+    body.detail-mode .kpi    { background: var(--surface); border-color: var(--border); }
+    body.detail-mode .chart-wrap { background: var(--surface); border-color: var(--border); }
+    body.detail-mode .refresh-btn { border-color: var(--border2); }
+    body.detail-mode canvas { max-height: 200px !important; }
+
+    .detail-title-bar {
+      padding: 18px 14px 14px;
+      display: none;
+    }
+
+    body.detail-mode .detail-title-bar { display: block; }
+
+    .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .detail-range { font-size: 11px; font-family: var(--mono); color: var(--muted); }
+
+    /* Toggles */
+    .toggles {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .toggle {
+      display: flex; align-items: center; gap: 5px;
+      cursor: pointer; font-size: 10px;
+      font-family: var(--mono); color: var(--muted);
+      transition: opacity .2s; user-select: none;
+    }
+    .toggle.off { opacity: .3; }
+    .toggle-line { width: 18px; height: 2px; border-radius: 2px; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); margin-top: 12px; }
+    th { text-align: right; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted2); padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    th:first-child { text-align: left; }
+    td { text-align: right; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    td:first-child { text-align: left; color: var(--text); opacity: .7; }
+    tr:last-child td { border-bottom: none; }
   </style>
 </head>
 <body>
 
-<div class="tabs">
-  <div class="tab active" data-tab="widget">Widget</div>
-  <div class="tab" data-tab="detail">Détail</div>
+<div class="topbar">
+  <span class="brand" id="topbar-brand">Studio Pagaille · LinkedIn</span>
+  <div class="topbar-right">
+    <a class="detail-link" id="detail-link" href="?mode=detail" target="_blank">Détail →</a>
+    <button class="refresh-btn" id="refresh-btn" title="Actualiser">↻</button>
+  </div>
 </div>
 
 <div id="loading">Chargement…</div>
 
-<div id="widget" class="view">
-  <div class="widget-header">
-    <span class="widget-brand">Studio Pagaille · LinkedIn</span>
-    <span id="widget-period" style="font-size:10px;font-family:var(--mono);color:var(--muted)"></span>
-  </div>
-  <div class="widget-latest" id="widget-kpis"></div>
-  <div class="widget-chart-wrap">
-    <div class="widget-chart-label">Impressions · 8 dernières semaines</div>
-    <canvas id="chart-widget"></canvas>
-  </div>
-</div>
+<div id="main" style="display:none">
 
-<div id="detail" class="view">
-  <div class="detail-header">
-    <div>
-      <div class="detail-title">Stats hebdomadaires</div>
-      <div class="detail-subtitle" id="detail-range"></div>
+  <!-- TITRE (mode détail seulement) -->
+  <div class="detail-title-bar">
+    <div class="detail-title">Stats hebdomadaires</div>
+    <div class="detail-range" id="detail-range"></div>
+  </div>
+
+  <div class="widget-body">
+    <!-- KPIs -->
+    <div class="kpis" id="kpis"></div>
+
+    <!-- Chart -->
+    <div class="chart-wrap">
+      <div class="chart-label" id="chart-label">Impressions · dernières semaines</div>
+      <div class="toggles" id="toggles" style="display:none"></div>
+      <canvas id="chart"></canvas>
     </div>
-    <button class="btn" onclick="loadData()">↻</button>
-  </div>
 
-  <div class="kpis" id="detail-kpis"></div>
-
-  <div class="chart-box">
-    <div class="chart-top">
-      <span class="chart-label" id="detail-weeks"></span>
-      <div class="toggles" id="toggles"></div>
+    <!-- Table (détail seulement) -->
+    <div id="table-wrap" style="display:none; margin-top:12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Semaine</th>
+            <th>Impressions</th>
+            <th>Réactions</th>
+            <th>Commentaires</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
     </div>
-    <canvas id="chart-detail"></canvas>
-  </div>
-
-  <div class="chart-box">
-    <table>
-      <thead>
-        <tr>
-          <th>Semaine</th>
-          <th>Impressions</th>
-          <th>Réactions</th>
-          <th>Commentaires</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
   </div>
 </div>
 
 <script>
-const C = {
-  impressions: "#4f8fff",
-  reactions:   "#ff5c9e",
-  commentaires:"#4ecb8d",
-};
+const C = { impressions:"#3b6ef0", reactions:"#e8427c", commentaires:"#1da362" };
+let allData = [], chartInst = null;
+let active = { impressions:true, reactions:true, commentaires:true };
 
-let allData = [];
-let chartWidget = null, chartDetail = null;
-let active = { impressions: true, reactions: true, commentaires: true };
+// Détecte si on est en mode détail (?mode=detail)
+const isDetail = new URLSearchParams(location.search).get("mode") === "detail";
 
-/* ── TABS ── */
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById(tab.dataset.tab).classList.add("active");
-  });
-});
+if (isDetail) {
+  document.body.classList.add("detail-mode");
+  document.getElementById("detail-link").style.display = "none";
+  document.getElementById("topbar-brand").textContent = "Stats hebdomadaires";
+}
 
-/* ── LOAD ── */
 async function loadData() {
+  const btn = document.getElementById("refresh-btn");
+  btn.classList.add("spinning");
   document.getElementById("loading").style.display = "block";
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("main").style.display = "none";
 
   try {
     const res = await fetch("/api/stats");
     allData = await res.json();
     if (!Array.isArray(allData) || !allData.length) throw new Error("Aucune donnée");
-
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("widget").classList.add("active");
-
-    renderWidget();
-    renderDetail();
+    render();
   } catch(e) {
     document.getElementById("loading").textContent = "Erreur : " + e.message;
+  } finally {
+    btn.classList.remove("spinning");
   }
 }
 
-/* ══ WIDGET ══ */
-function renderWidget() {
-  const latest = allData[allData.length - 1];
-  const prev   = allData[allData.length - 2];
+function render() {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("main").style.display = "block";
 
-  document.getElementById("widget-period").textContent = latest.semaine;
-
-  const fields = [
-    { key: "impressions", label: "Imp.", color: C.impressions },
-    { key: "reactions",   label: "Réac.", color: C.reactions },
-    { key: "commentaires",label: "Com.", color: C.commentaires },
-  ];
-
-  document.getElementById("widget-kpis").innerHTML = fields.map(({ key, label, color }) => {
-    const val = latest[key];
-    const pval = prev?.[key];
-    const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
-    const cls = delta > 0 ? "up" : "down";
-    return `<div class="widget-kpi">
-      <div class="widget-kpi-label">${label}</div>
-      <div class="widget-kpi-val" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
-      ${delta !== null ? `<div class="widget-kpi-delta ${cls}">${delta > 0 ? "▲" : "▼"}${Math.abs(delta)}%</div>` : ""}
-    </div>`;
-  }).join("");
-
-  const last8 = allData.slice(-8);
-  if (chartWidget) chartWidget.destroy();
-  chartWidget = new Chart(document.getElementById("chart-widget").getContext("2d"), {
-    type: "line",
-    data: {
-      labels: last8.map(d => d.semaine),
-      datasets: [{
-        data: last8.map(d => d.impressions),
-        borderColor: C.impressions,
-        borderWidth: 1.5,
-        pointRadius: 2,
-        fill: true,
-        backgroundColor: C.impressions + "15",
-        tension: 0.4,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      scales: {
-        x: { display: false },
-        y: { display: false },
-      },
-      animation: false,
-    }
-  });
-}
-
-/* ══ DÉTAIL ══ */
-function renderDetail() {
   const latest = allData[allData.length - 1];
   const prev   = allData[allData.length - 2];
   const first  = allData[0];
 
-  document.getElementById("detail-range").textContent =
-    `${first.semaine} → ${latest.semaine}`;
-  document.getElementById("detail-weeks").textContent =
-    `Évolution sur ${allData.length} semaine${allData.length > 1 ? "s" : ""}`;
+  // Range
+  if (isDetail) {
+    document.getElementById("detail-range").textContent = `${first.semaine} → ${latest.semaine}`;
+  }
 
   // KPIs
   const fields = [
-    { key: "impressions",  label: "Impressions",  icon: "👁",  color: C.impressions },
-    { key: "reactions",    label: "Réactions",    icon: "❤️",  color: C.reactions },
-    { key: "commentaires", label: "Commentaires", icon: "💬", color: C.commentaires },
+    { key:"impressions",  label:"Impressions", icon:"👁",  color:C.impressions },
+    { key:"reactions",    label:"Réactions",   icon:"❤️", color:C.reactions },
+    { key:"commentaires", label:"Comm.",        icon:"💬", color:C.commentaires },
   ];
 
-  document.getElementById("detail-kpis").innerHTML = fields.map(({ key, label, icon, color }) => {
-    const val  = latest[key];
-    const pval = prev?.[key];
+  document.getElementById("kpis").innerHTML = fields.map(({key, label, icon, color}) => {
+    const val = latest[key], pval = prev?.[key];
     const delta = pval ? ((val - pval) / pval * 100).toFixed(0) : null;
     const cls = delta > 0 ? "up" : "down";
     return `<div class="kpi">
-      <div class="kpi-label">${icon} ${label}</div>
+      <div class="kpi-label">${isDetail ? icon+" " : ""}${label}</div>
       <div class="kpi-val" style="color:${color}">${val.toLocaleString("fr-FR")}</div>
-      ${delta !== null ? `<div class="kpi-delta ${cls}">${delta > 0 ? "▲" : "▼"}${Math.abs(delta)}% vs S-1</div>` : ""}
+      ${delta !== null ? `<div class="kpi-delta ${cls}">${delta>0?"▲":"▼"}${Math.abs(delta)}%${isDetail?" vs S-1":""}</div>` : ""}
     </div>`;
   }).join("");
 
-  renderToggles();
-  renderDetailChart();
-  renderTable();
+  // Toggles + table (mode détail seulement)
+  if (isDetail) {
+    document.getElementById("chart-label").textContent = `Évolution sur ${allData.length} semaine${allData.length>1?"s":""}`;
+    document.getElementById("toggles").style.display = "flex";
+    document.getElementById("table-wrap").style.display = "block";
+    renderToggles();
+    renderTable();
+  }
+
+  renderChart();
 }
 
 function renderToggles() {
-  document.getElementById("toggles").innerHTML = ["impressions","reactions","commentaires"].map(key => `
-    <div class="toggle ${active[key] ? "" : "off"}" onclick="toggleLine('${key}')">
+  document.getElementById("toggles").innerHTML = ["impressions","reactions","commentaires"].map(key =>
+    `<div class="toggle ${active[key]?"":"off"}" onclick="toggleLine('${key}')">
       <div class="toggle-line" style="background:${C[key]}"></div>
-      <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
-    </div>
-  `).join("");
+      <span>${key.charAt(0).toUpperCase()+key.slice(1)}</span>
+    </div>`
+  ).join("");
 }
 
 function toggleLine(key) {
   active[key] = !active[key];
   renderToggles();
-  renderDetailChart();
+  renderChart();
 }
 
-function renderDetailChart() {
-  if (chartDetail) chartDetail.destroy();
+function renderChart() {
+  if (chartInst) chartInst.destroy();
 
+  const data = isDetail ? allData : allData.slice(-8);
   const datasets = [];
-  if (active.impressions) datasets.push({
-    label: "Impressions", data: allData.map(d => d.impressions),
-    borderColor: C.impressions, borderWidth: 2,
-    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
-    yAxisID: "y1", fill: false,
-  });
-  if (active.reactions) datasets.push({
-    label: "Réactions", data: allData.map(d => d.reactions),
-    borderColor: C.reactions, borderWidth: 2,
-    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
-    yAxisID: "y2", fill: false,
-  });
-  if (active.commentaires) datasets.push({
-    label: "Commentaires", data: allData.map(d => d.commentaires),
-    borderColor: C.commentaires, borderWidth: 2,
-    pointRadius: 3, pointHoverRadius: 5, tension: 0.3,
-    yAxisID: "y2", fill: false,
-  });
 
-  chartDetail = new Chart(document.getElementById("chart-detail").getContext("2d"), {
+  if (!isDetail) {
+    // Widget : une seule courbe impressions, minimaliste
+    datasets.push({
+      data: data.map(d => d.impressions),
+      borderColor: C.impressions,
+      borderWidth: 1.5,
+      pointRadius: 2,
+      fill: true,
+      backgroundColor: C.impressions + "18",
+      tension: 0.4,
+    });
+  } else {
+    if (active.impressions) datasets.push({ label:"Impressions", data:allData.map(d=>d.impressions), borderColor:C.impressions, borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y1", fill:false });
+    if (active.reactions)   datasets.push({ label:"Réactions",   data:allData.map(d=>d.reactions),   borderColor:C.reactions,   borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
+    if (active.commentaires)datasets.push({ label:"Commentaires",data:allData.map(d=>d.commentaires),borderColor:C.commentaires,borderWidth:2, pointRadius:3, pointHoverRadius:5, tension:.3, yAxisID:"y2", fill:false });
+  }
+
+  const scalesWidget = {
+    x: { display:false },
+    y: { display:false },
+  };
+
+  const scalesDetail = {
+    x:  { ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:"#1c2133"} },
+    y1: { position:"left",  ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{color:"#1c2133"} },
+    y2: { position:"right", ticks:{color:"#2e3650", font:{family:"'IBM Plex Mono'",size:9}}, grid:{display:false} },
+  };
+
+  chartInst = new Chart(document.getElementById("chart").getContext("2d"), {
     type: "line",
-    data: { labels: allData.map(d => d.semaine), datasets },
+    data: { labels: data.map(d => d.semaine), datasets },
     options: {
       responsive: true,
-      interaction: { mode: "index", intersect: false },
+      animation: !isDetail,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: "#0c0e14",
-          borderColor: "#1c2133",
-          borderWidth: 1,
-          titleColor: "#4a5470",
-          bodyColor: "#d0d8ef",
-          titleFont: { family: "'IBM Plex Mono'", size: 10 },
-          bodyFont:  { family: "'IBM Plex Mono'", size: 11 },
-        }
+        tooltip: isDetail ? {
+          backgroundColor:"#0c0e14", borderColor:"#1c2133", borderWidth:1,
+          titleColor:"#4a5470", bodyColor:"#d0d8ef",
+          titleFont:{family:"'IBM Plex Mono'",size:10},
+          bodyFont:{family:"'IBM Plex Mono'",size:11},
+        } : { enabled: false },
       },
-      scales: {
-        x:  { ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { color:"#12151f" } },
-        y1: { position:"left",  ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { color:"#1c2133" } },
-        y2: { position:"right", ticks: { color:"#2e3650", font:{ family:"'IBM Plex Mono'", size:9 } }, grid: { display:false } },
-      }
+      scales: isDetail ? scalesDetail : scalesWidget,
     }
   });
 }
@@ -563,6 +430,7 @@ function renderTable() {
   `).join("");
 }
 
+document.getElementById("refresh-btn").addEventListener("click", loadData);
 loadData();
 </script>
 </body>
